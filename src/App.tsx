@@ -5,14 +5,14 @@ import { AdminLogin } from './components/AdminLogin';
 import { Chatbot } from './components/Chatbot';
 import { useStore } from './lib/store';
 import { Product } from './types';
+import { auth } from './firebase';
 
 export default function App() {
   const [view, setView] = useState<'store' | 'admin-login' | 'admin-dashboard'>('store');
-  const { products, setProducts, orders, setOrders, settings, setSettings } = useStore();
+  const { products, addProduct, updateProduct, deleteProduct, orders, addOrder, updateOrder, settings, updateSettings } = useStore();
 
-  const handleOrderSubmit = (product: Product, details: { name: string; email: string }) => {
+  const handleOrderSubmit = async (product: Product, details: { name: string; email: string }) => {
     const newOrder = {
-      id: crypto.randomUUID(),
       customerName: details.name,
       email: details.email,
       product,
@@ -20,12 +20,17 @@ export default function App() {
       status: 'PENDING' as const,
       date: new Date().toISOString()
     };
-    setOrders([...orders, newOrder]);
+    await addOrder(newOrder);
     
     // Decrease stock
-    setProducts(products.map(p => p.id === product.id ? { ...p, stock: p.stock - 1 } : p));
+    await updateProduct(product.id, { stock: product.stock - 1 });
     
     alert('Order placed successfully! Please check your email.');
+  };
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    setView('store');
   };
 
   return (
@@ -49,10 +54,10 @@ export default function App() {
       )}
       {view === 'admin-dashboard' && (
         <AdminDashboard 
-          products={products} setProducts={setProducts}
-          orders={orders} setOrders={setOrders}
-          settings={settings} setSettings={setSettings}
-          onLogout={() => setView('store')}
+          products={products} addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct}
+          orders={orders} updateOrder={updateOrder}
+          settings={settings} updateSettings={updateSettings}
+          onLogout={handleLogout}
         />
       )}
     </>

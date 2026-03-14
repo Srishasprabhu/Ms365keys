@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "A product in the store",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "category": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["name", "description", "price", "stock", "category", "type"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string" },
+        "email": { "type": "string" },
+        "product": { "$ref": "#/entities/Product" },
+        "price": { "type": "number" },
+        "status": { "type": "string", "enum": ["PENDING", "COMPLETED", "CANCELLED"] },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerName", "email", "product", "price", "status", "date"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global store settings",
+      "type": "object",
+      "properties": {
+        "paymentQrUrl": { "type": "string" }
+      },
+      "required": ["paymentQrUrl"]
+    }
+  },
+  "firestore": {
+    "products/{productId}": {
+      "schema": "#/entities/Product",
+      "description": "Store products"
+    },
+    "orders/{orderId}": {
+      "schema": "#/entities/Order",
+      "description": "Customer orders"
+    },
+    "settings/global": {
+      "schema": "#/entities/Settings",
+      "description": "Global settings"
+    }
+  }
+}

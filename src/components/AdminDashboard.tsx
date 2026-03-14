@@ -4,15 +4,17 @@ import { Product, Order, Settings } from '../types';
 
 interface AdminDashboardProps {
   products: Product[];
-  setProducts: (p: Product[]) => void;
+  addProduct: (p: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (id: string, p: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   orders: Order[];
-  setOrders: (o: Order[]) => void;
+  updateOrder: (id: string, o: Partial<Order>) => Promise<void>;
   settings: Settings;
-  setSettings: (s: Settings) => void;
+  updateSettings: (s: Settings) => Promise<void>;
   onLogout: () => void;
 }
 
-export function AdminDashboard({ products, setProducts, orders, setOrders, settings, setSettings, onLogout }: AdminDashboardProps) {
+export function AdminDashboard({ products, addProduct, updateProduct, deleteProduct, orders, updateOrder, settings, updateSettings, onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState('products');
 
   return (
@@ -42,9 +44,9 @@ export function AdminDashboard({ products, setProducts, orders, setOrders, setti
 
       {/* Content */}
       <div className="flex-1 p-6 overflow-auto">
-        {activeTab === 'products' && <ProductsTab products={products} setProducts={setProducts} />}
-        {activeTab === 'orders' && <OrdersTab orders={orders} setOrders={setOrders} />}
-        {activeTab === 'settings' && <SettingsTab settings={settings} setSettings={setSettings} />}
+        {activeTab === 'products' && <ProductsTab products={products} addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct} />}
+        {activeTab === 'orders' && <OrdersTab orders={orders} updateOrder={updateOrder} />}
+        {activeTab === 'settings' && <SettingsTab settings={settings} updateSettings={updateSettings} />}
       </div>
     </div>
   );
@@ -61,21 +63,21 @@ function Tab({ buttonText, icon, isActive, onClick }: { buttonText: string, icon
   );
 }
 
-function ProductsTab({ products, setProducts }: { products: Product[], setProducts: (p: Product[]) => void }) {
+function ProductsTab({ products, addProduct, updateProduct, deleteProduct }: { products: Product[], addProduct: (p: Omit<Product, 'id'>) => Promise<void>, updateProduct: (id: string, p: Partial<Product>) => Promise<void>, deleteProduct: (id: string) => Promise<void> }) {
   const [isEditing, setIsEditing] = useState<Partial<Product> | null>(null);
 
-  const handleSave = (product: Partial<Product>) => {
+  const handleSave = async (product: Partial<Product>) => {
     if (product.id) {
-      setProducts(products.map(p => p.id === product.id ? product as Product : p));
+      await updateProduct(product.id, product);
     } else {
-      setProducts([...products, { ...product, id: Date.now().toString() } as Product]);
+      await addProduct(product as Omit<Product, 'id'>);
     }
     setIsEditing(null);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if(confirm('Are you sure you want to delete this product?')) {
-      setProducts(products.filter(p => p.id !== id));
+      await deleteProduct(id);
     }
   };
 
@@ -177,9 +179,9 @@ function ProductForm({ product, onSave, onCancel }: { product: Partial<Product>,
   );
 }
 
-function OrdersTab({ orders, setOrders }: { orders: Order[], setOrders: (o: Order[]) => void }) {
-  const updateStatus = (id: string, status: any) => {
-    setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
+function OrdersTab({ orders, updateOrder }: { orders: Order[], updateOrder: (id: string, o: Partial<Order>) => Promise<void> }) {
+  const handleUpdateStatus = async (id: string, status: any) => {
+    await updateOrder(id, { status });
   };
 
   return (
@@ -220,7 +222,7 @@ function OrdersTab({ orders, setOrders }: { orders: Order[], setOrders: (o: Orde
                 <td className="p-4 text-right">
                   <select 
                     value={o.status} 
-                    onChange={(e) => updateStatus(o.id, e.target.value)}
+                    onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
                     className="bg-zinc-950 border border-zinc-800 rounded p-1 text-xs text-white focus:outline-none focus:border-red-500"
                   >
                     <option value="PENDING">Pending</option>
@@ -240,11 +242,11 @@ function OrdersTab({ orders, setOrders }: { orders: Order[], setOrders: (o: Orde
   );
 }
 
-function SettingsTab({ settings, setSettings }: { settings: Settings, setSettings: (s: Settings) => void }) {
+function SettingsTab({ settings, updateSettings }: { settings: Settings, updateSettings: (s: Settings) => Promise<void> }) {
   const [url, setUrl] = useState(settings.paymentQrUrl);
 
-  const handleSave = () => {
-    setSettings({ ...settings, paymentQrUrl: url });
+  const handleSave = async () => {
+    await updateSettings({ ...settings, paymentQrUrl: url });
     alert('Settings saved successfully!');
   };
 

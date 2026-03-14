@@ -1,62 +1,85 @@
 import { useState, useEffect } from 'react';
 import { Product, Order, Settings } from '../types';
-
-const defaultProducts: Product[] = [
-  { 
-    id: '1', 
-    name: 'Microsoft 365 Personal', 
-    description: 'Lifetime subscription for personal use', 
-    price: 2, 
-    stock: 10, 
-    category: 'Microsoft 365', 
-    type: 'Account' 
-  },
-  { 
-    id: '2', 
-    name: 'Office 2024 Professional', 
-    description: 'Lifetime key for 1 PC', 
-    price: 5, 
-    stock: 50, 
-    category: 'Office', 
-    type: 'Key' 
-  },
-];
+import { db, auth } from '../firebase';
+import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const defaultSettings: Settings = {
   paymentQrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ExamplePaymentLink',
 };
 
 export function useStore() {
-  const [products, setProducts] = useState<Product[]>(() => {
-    try {
-      const saved = localStorage.getItem('products');
-      return saved ? JSON.parse(saved) : defaultProducts;
-    } catch (e) {
-      return defaultProducts;
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (user && user.email === 'srishasprabhu@gmail.com') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+        setOrders([]); // Clear orders if not admin
+      }
+    });
+
+    return () => unsubAuth();
+  }, []);
+
+  useEffect(() => {
+    const unsubProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
+      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+    }, (error) => console.error("Error fetching products:", error));
+
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
+      if (docSnap.exists()) {
+        setSettings(docSnap.data() as Settings);
+      }
+    }, (error) => console.error("Error fetching settings:", error));
+
+    let unsubOrders: () => void = () => {};
+
+    if (isAdmin) {
+      unsubOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
+        setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
+      }, (error) => console.error("Error fetching orders:", error));
     }
-  });
 
-  const [orders, setOrders] = useState<Order[]>(() => {
-    try {
-      const saved = localStorage.getItem('orders');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+    return () => {
+      unsubProducts();
+      unsubSettings();
+      unsubOrders();
+    };
+  }, [isAdmin]);
 
-  const [settings, setSettings] = useState<Settings>(() => {
-    try {
-      const saved = localStorage.getItem('settings');
-      return saved ? JSON.parse(saved) : defaultSettings;
-    } catch (e) {
-      return defaultSettings;
-    }
-  });
+  const addProduct = async (product: Omit<Product, 'id'>) => {
+    await addDoc(collection(db, 'products'), product);
+  };
 
-  useEffect(() => { localStorage.setItem('products', JSON.stringify(products)); }, [products]);
-  useEffect(() => { localStorage.setItem('orders', JSON.stringify(orders)); }, [orders]);
-  useEffect(() => { localStorage.setItem('settings', JSON.stringify(settings)); }, [settings]);
+  const updateProduct = async (id: string, product: Partial<Product>) => {
+    await updateDoc(doc(db, 'products', id), product);
+  };
 
-  return { products, setProducts, orders, setOrders, settings, setSettings };
+  const deleteProduct = async (id: string) => {
+    await deleteDoc(doc(db, 'products', id));
+  };
+
+  const addOrder = async (order: Omit<Order, 'id'>) => {
+    await addDoc(collection(db, 'orders'), order);
+  };
+
+  const updateOrder = async (id: string, order: Partial<Order>) => {
+    await updateDoc(doc(db, 'orders', id), order);
+  };
+
+  const updateSettings = async (newSettings: Settings) => {
+    await setDoc(doc(db, 'settings', 'global'), newSettings);
+  };
+
+  return { 
+    products, addProduct, updateProduct, deleteProduct, 
+    orders, addOrder, updateOrder, 
+    settings, updateSettings 
+  };
 }
