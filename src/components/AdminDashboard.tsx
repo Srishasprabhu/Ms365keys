@@ -243,10 +243,12 @@ function OrdersTab({ orders, updateOrder }: { orders: Order[], updateOrder: (id:
 }
 
 function SettingsTab({ settings, updateSettings }: { settings: Settings, updateSettings: (s: Settings) => Promise<void> }) {
-  const [url, setUrl] = useState(settings.paymentQrUrl);
+  const [url, setUrl] = useState(settings.paymentQrUrl || '');
+  const [upiId, setUpiId] = useState(settings.upiId || '');
+  const [upiName, setUpiName] = useState(settings.upiName || '');
 
   const handleSave = async () => {
-    await updateSettings({ ...settings, paymentQrUrl: url });
+    await updateSettings({ ...settings, paymentQrUrl: url, upiId, upiName });
     alert('Settings saved successfully!');
   };
 
@@ -264,9 +266,37 @@ function SettingsTab({ settings, updateSettings }: { settings: Settings, updateS
   return (
     <div className="max-w-xl">
       <h2 className="text-2xl font-bold text-yellow-500 mb-6">Payment Settings</h2>
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-        <label className="block text-sm text-zinc-400 mb-2">Payment QR Code</label>
-        <p className="text-xs text-zinc-500 mb-4">Upload a new QR code image or paste an image URL</p>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 mb-6">
+        <h3 className="text-xl font-bold text-yellow-500 mb-4">Dynamic UPI Settings</h3>
+        <p className="text-sm text-zinc-400 mb-6">Enter your UPI details to generate dynamic QR codes and deep links for customers.</p>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">UPI ID (VPA)</label>
+            <input 
+              type="text" 
+              value={upiId} 
+              onChange={e => setUpiId(e.target.value)} 
+              className="w-full bg-zinc-950 border border-zinc-800 rounded p-3 text-white focus:outline-none focus:border-yellow-500"
+              placeholder="e.g. yourname@upi"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">Payee Name</label>
+            <input 
+              type="text" 
+              value={upiName} 
+              onChange={e => setUpiName(e.target.value)} 
+              className="w-full bg-zinc-950 border border-zinc-800 rounded p-3 text-white focus:outline-none focus:border-yellow-500"
+              placeholder="e.g. John Doe"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 mb-6">
+        <h3 className="text-xl font-bold text-yellow-500 mb-4">Fallback Static QR Code</h3>
+        <p className="text-sm text-zinc-400 mb-6">This QR will be shown if Dynamic UPI is not configured.</p>
         
         <div className="flex flex-col gap-4 mb-6">
           <div className="relative">

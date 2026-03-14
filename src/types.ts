@@ -20,4 +20,6 @@ export interface Order {
 
 export interface Settings {
   paymentQrUrl: string;
+  upiId?: string;
+  upiName?: string;
 }

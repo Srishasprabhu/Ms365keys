@@ -5,6 +5,8 @@ import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc } fro
 
 const defaultSettings: Settings = {
   paymentQrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ExamplePaymentLink',
+  upiId: '',
+  upiName: '',
 };
 
 export function useStore(isAdmin: boolean = false) {

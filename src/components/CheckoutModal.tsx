@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Clock, Smartphone } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Product, Settings } from '../types';
 
 interface CheckoutModalProps {
@@ -13,6 +14,11 @@ export function CheckoutModal({ product, settings, onClose, onSubmit }: Checkout
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +28,10 @@ export function CheckoutModal({ product, settings, onClose, onSubmit }: Checkout
     }
     onSubmit({ name, email });
   };
+
+  const upiLink = settings.upiId 
+    ? `upi://pay?pa=${encodeURIComponent(settings.upiId)}&pn=${encodeURIComponent(settings.upiName || 'Merchant')}&am=${product.price}&cu=INR`
+    : '';
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -70,10 +80,31 @@ export function CheckoutModal({ product, settings, onClose, onSubmit }: Checkout
 
           <div className="mt-8 border border-red-900/50 rounded p-6 text-center bg-zinc-900/50">
             <h3 className="text-yellow-500 font-bold mb-4 uppercase tracking-wider text-sm">Scan to Pay</h3>
-            <div className="bg-white p-2 inline-block rounded mb-4">
-              <img src={settings.paymentQrUrl} alt="Payment QR Code" className="w-32 h-32 object-contain" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150?text=Invalid+QR')} />
-            </div>
-            <p className="text-zinc-500 text-xs">Scan this QR code to complete payment</p>
+            
+            {settings.upiId ? (
+              <div className="flex flex-col items-center">
+                <div className="bg-white p-3 inline-block rounded-xl mb-4 shadow-lg">
+                  <QRCodeSVG value={upiLink} size={160} level="H" includeMargin={false} />
+                </div>
+                {isMobile && (
+                  <a 
+                    href={upiLink}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded font-bold flex items-center justify-center gap-2 transition-colors mb-4"
+                  >
+                    <Smartphone size={20} />
+                    Pay via UPI App
+                  </a>
+                )}
+                <p className="text-zinc-500 text-xs">Scan using GPay, PhonePe, or Paytm</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <div className="bg-white p-2 inline-block rounded mb-4">
+                  <img src={settings.paymentQrUrl} alt="Payment QR Code" className="w-32 h-32 object-contain" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150?text=Invalid+QR')} />
+                </div>
+                <p className="text-zinc-500 text-xs">Scan this QR code to complete payment</p>
+              </div>
+            )}
           </div>
         </div>
 
