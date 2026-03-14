@@ -25,6 +25,21 @@ export default function App() {
     // Decrease stock
     await updateProduct(product.id, { stock: product.stock - 1 });
     
+    // Send SMS Notification
+    try {
+      await fetch('/api/notify-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: details.name,
+          productName: product.name,
+          price: product.price
+        })
+      });
+    } catch (error) {
+      console.error('Failed to send SMS notification', error);
+    }
+
     alert('Order placed successfully! Please check your email.');
   };
 
