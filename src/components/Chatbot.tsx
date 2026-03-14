@@ -2,7 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { MessageCircle, X, Send, Image as ImageIcon, Loader2 } from 'lucide-react';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+function getAIClient() {
+  if (!aiClient) {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) {
+      throw new Error('GEMINI_API_KEY is missing');
+    }
+    aiClient = new GoogleGenAI({ apiKey: key });
+  }
+  return aiClient;
+}
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -55,7 +65,7 @@ export function Chatbot() {
         parts.push({ text: input });
       }
 
-      const response = await ai.models.generateContent({
+      const response = await getAIClient().models.generateContent({
         model: 'gemini-3.1-pro-preview',
         contents: { parts },
         config: {
@@ -65,9 +75,12 @@ export function Chatbot() {
       });
 
       setMessages(prev => [...prev, { role: 'model', text: response.text || 'Sorry, I could not generate a response.' }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chatbot error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error while processing your request.' }]);
+      const errorMessage = error.message?.includes('GEMINI_API_KEY') 
+        ? 'The Gemini API key is missing. Please add it to your Vercel Environment Variables.'
+        : 'Sorry, I encountered an error while processing your request.';
+      setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsTyping(false);
       setSelectedImage(null);

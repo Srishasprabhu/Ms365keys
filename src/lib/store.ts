@@ -28,18 +28,30 @@ const defaultSettings: Settings = {
 
 export function useStore() {
   const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('products');
-    return saved ? JSON.parse(saved) : defaultProducts;
+    try {
+      const saved = localStorage.getItem('products');
+      return saved ? JSON.parse(saved) : defaultProducts;
+    } catch (e) {
+      return defaultProducts;
+    }
   });
 
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('orders');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('orders');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
   });
 
   const [settings, setSettings] = useState<Settings>(() => {
-    const saved = localStorage.getItem('settings');
-    return saved ? JSON.parse(saved) : defaultSettings;
+    try {
+      const saved = localStorage.getItem('settings');
+      return saved ? JSON.parse(saved) : defaultSettings;
+    } catch (e) {
+      return defaultSettings;
+    }
   });
 
   useEffect(() => { localStorage.setItem('products', JSON.stringify(products)); }, [products]);

@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Google AI Studio App</title>
+    <script>
+      window.process = { env: {}, versions: {} };
+      window.addEventListener('error', function(event) {
+        document.body.innerHTML = '<div style="color:red;padding:20px;background:black;height:100vh;font-family:monospace"><h1>Global Error</h1><pre>' + event.error?.stack + '</pre></div>';
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
