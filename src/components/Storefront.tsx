@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, ShieldCheck, Mail, User, ShoppingCart } from 'lucide-react';
+import { Zap, ShieldCheck, Mail, User, ShoppingCart, Phone } from 'lucide-react';
 import { Product, Settings } from '../types';
 import { CheckoutModal } from './CheckoutModal';
 
@@ -86,6 +86,16 @@ export function Storefront({ products, settings, onOrderSubmit, onAdminClick }: 
 
       {/* Footer */}
       <footer className="text-center py-8 text-zinc-600 border-t border-zinc-900 mt-12">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-6 text-sm text-zinc-400">
+          <div className="flex items-center gap-2">
+            <Mail size={16} className="text-red-500" />
+            <a href="mailto:srishasprabhu@gmail.com" className="hover:text-yellow-500 transition-colors">srishasprabhu@gmail.com</a>
+          </div>
+          <div className="flex items-center gap-2">
+            <Phone size={16} className="text-red-500" />
+            <a href="tel:+917337872234" className="hover:text-yellow-500 transition-colors">+91 73378 72234</a>
+          </div>
+        </div>
         <p>&copy; 2026 OriginalAccess. All rights reserved.</p>
         <button onClick={onAdminClick} className="text-xs mt-2 hover:text-zinc-400">Admin Login</button>
       </footer>
