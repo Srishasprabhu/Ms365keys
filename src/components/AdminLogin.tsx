@@ -1,23 +1,17 @@
 import React, { useState } from 'react';
 import { Lock, User } from 'lucide-react';
-import { auth } from '../firebase';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 export function AdminLogin({ onLogin, onBack }: { onLogin: () => void; onBack: () => void }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleGoogleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      if (result.user.email === 'srishasprabhu@gmail.com') {
-        onLogin();
-      } else {
-        await auth.signOut();
-        setError('Unauthorized: You are not an admin.');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to login with Google');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username === 'admin' && password === '1976Prabhu#') {
+      onLogin();
+    } else {
+      setError('Invalid credentials');
     }
   };
 
@@ -38,12 +32,35 @@ export function AdminLogin({ onLogin, onBack }: { onLogin: () => void; onBack: (
           <p className="text-zinc-400 mt-2">Command Center Login</p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-4 text-center">
-          <p className="text-zinc-400 mb-4">Please sign in with your administrator Google account.</p>
-          <button onClick={handleGoogleLogin} className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-bold uppercase tracking-wider mt-6">
-            Sign in with Google
+        <form onSubmit={handleSubmit} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-4">
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">Username</label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-zinc-500"><User size={18} /></span>
+              <input 
+                type="text" 
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                className="w-full bg-zinc-950 border border-red-900/50 rounded p-2 pl-10 text-white focus:outline-none focus:border-red-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">Password</label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-zinc-500"><Lock size={18} /></span>
+              <input 
+                type="password" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full bg-zinc-950 border border-red-900/50 rounded p-2 pl-10 text-white focus:outline-none focus:border-red-500"
+              />
+            </div>
+          </div>
+          <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-bold uppercase tracking-wider mt-6">
+            Access Dashboard
           </button>
-        </div>
+        </form>
         
         <div className="text-center mt-6">
           <button onClick={onBack} className="text-zinc-500 hover:text-zinc-300 text-sm">

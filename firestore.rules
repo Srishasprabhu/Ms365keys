@@ -1,39 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if the user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // Helper function to check if the user is an admin
-    function isAdmin() {
-      return isAuthenticated() && request.auth.token.email == "srishasprabhu@gmail.com" && request.auth.token.email_verified == true;
-    }
-
-    // Products
-    match /products/{productId} {
-      // Anyone can view products
-      allow read: if true;
-      // Only admins can create, update, or delete products
-      allow write: if isAdmin();
-    }
-
-    // Orders
-    match /orders/{orderId} {
-      // Anyone can create an order
-      allow create: if true;
-      // Only admins can view, update, or delete orders
-      allow read, update, delete: if isAdmin();
-    }
-
-    // Settings
-    match /settings/{settingId} {
-      // Anyone can view settings (like payment QR)
-      allow read: if true;
-      // Only admins can update settings
-      allow write: if isAdmin();
+    // WARNING: Since authentication was removed, these rules allow public read/write access.
+    // This is insecure and only recommended for prototyping.
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

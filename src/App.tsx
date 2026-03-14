@@ -5,11 +5,11 @@ import { AdminLogin } from './components/AdminLogin';
 import { Chatbot } from './components/Chatbot';
 import { useStore } from './lib/store';
 import { Product } from './types';
-import { auth } from './firebase';
 
 export default function App() {
   const [view, setView] = useState<'store' | 'admin-login' | 'admin-dashboard'>('store');
-  const { products, addProduct, updateProduct, deleteProduct, orders, addOrder, updateOrder, settings, updateSettings } = useStore();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { products, addProduct, updateProduct, deleteProduct, orders, addOrder, updateOrder, settings, updateSettings } = useStore(isAdmin);
 
   const handleOrderSubmit = async (product: Product, details: { name: string; email: string }) => {
     const newOrder = {
@@ -28,8 +28,13 @@ export default function App() {
     alert('Order placed successfully! Please check your email.');
   };
 
-  const handleLogout = async () => {
-    await auth.signOut();
+  const handleLogin = () => {
+    setIsAdmin(true);
+    setView('admin-dashboard');
+  };
+
+  const handleLogout = () => {
+    setIsAdmin(false);
     setView('store');
   };
 
@@ -48,7 +53,7 @@ export default function App() {
       )}
       {view === 'admin-login' && (
         <AdminLogin 
-          onLogin={() => setView('admin-dashboard')} 
+          onLogin={handleLogin} 
           onBack={() => setView('store')} 
         />
       )}

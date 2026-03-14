@@ -1,31 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Product, Order, Settings } from '../types';
-import { db, auth } from '../firebase';
+import { db } from '../firebase';
 import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
 
 const defaultSettings: Settings = {
   paymentQrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ExamplePaymentLink',
 };
 
-export function useStore() {
+export function useStore(isAdmin: boolean = false) {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const unsubAuth = onAuthStateChanged(auth, (user) => {
-      if (user && user.email === 'srishasprabhu@gmail.com') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-        setOrders([]); // Clear orders if not admin
-      }
-    });
-
-    return () => unsubAuth();
-  }, []);
 
   useEffect(() => {
     const unsubProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
