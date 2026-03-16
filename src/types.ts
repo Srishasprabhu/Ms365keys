@@ -6,6 +6,7 @@ export interface Product {
   stock: number;
   category: string;
   type: string;
+  flashSaleEnd?: string;
 }
 
 export interface Order {
@@ -14,8 +15,9 @@ export interface Order {
   email: string;
   product: Product;
   price: number;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'DELIVERED';
   date: string;
+  deliveredKey?: string;
 }
 
 export interface Settings {

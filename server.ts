@@ -10,6 +10,25 @@ async function startServer() {
   app.use(express.json());
 
   // API routes FIRST
+  app.post("/api/deliver-order", async (req, res) => {
+    try {
+      const { orderId, customerEmail, productName, key } = req.body;
+      console.log(`\n[EMAIL SIMULATION] =====================`);
+      console.log(`Sending delivery email to: ${customerEmail}`);
+      console.log(`Product: ${productName}`);
+      console.log(`Key/Account Details: ${key}`);
+      console.log(`========================================\n`);
+      
+      // In a production app, you would use Resend, Nodemailer, or SendGrid here
+      // e.g., await resend.emails.send({ to: customerEmail, subject: 'Your Order', html: `...` })
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Email Delivery Error:", error);
+      res.status(500).json({ success: false, error: "Failed to send email" });
+    }
+  });
+
   app.post("/api/notify-order", async (req, res) => {
     try {
       const { customerName, productName, price } = req.body;

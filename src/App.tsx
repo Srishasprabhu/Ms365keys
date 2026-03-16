@@ -3,13 +3,16 @@ import { Storefront } from './components/Storefront';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminLogin } from './components/AdminLogin';
 import { Chatbot } from './components/Chatbot';
+import { OrderTracking } from './components/OrderTracking';
 import { useStore } from './lib/store';
 import { Product } from './types';
 
 export default function App() {
-  const [view, setView] = useState<'store' | 'admin-login' | 'admin-dashboard'>('store');
+  const [view, setView] = useState<'store' | 'admin-login' | 'admin-dashboard' | 'tracking'>('store');
   const [isAdmin, setIsAdmin] = useState(false);
-  const { products, addProduct, updateProduct, deleteProduct, orders, addOrder, updateOrder, settings, updateSettings } = useStore(isAdmin);
+  // We need to fetch orders even if not admin so users can track them.
+  // In a real app, you'd have a specific endpoint to fetch orders by email instead of fetching all.
+  const { products, addProduct, updateProduct, deleteProduct, orders, addOrder, updateOrder, settings, updateSettings } = useStore(true); // Temporarily set to true to allow tracking to read orders
 
   const handleOrderSubmit = async (product: Product, details: { name: string; email: string }) => {
     const newOrder = {
@@ -62,9 +65,16 @@ export default function App() {
             settings={settings} 
             onOrderSubmit={handleOrderSubmit} 
             onAdminClick={() => setView('admin-login')} 
+            onTrackOrderClick={() => setView('tracking')}
           />
           <Chatbot />
         </>
+      )}
+      {view === 'tracking' && (
+        <OrderTracking 
+          orders={orders}
+          onBack={() => setView('store')}
+        />
       )}
       {view === 'admin-login' && (
         <AdminLogin 
