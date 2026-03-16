@@ -193,19 +193,31 @@ function OrdersTab({ orders, updateOrder }: { orders: Order[], updateOrder: (id:
     const key = prompt(`Enter the Key or Account Details to deliver to ${order.email}:`);
     if (key) {
       try {
-        await fetch('/api/deliver-order', {
+        const response = await fetch('/api/deliver-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             orderId: order.id,
             customerEmail: order.email,
-            productName: order.product.name,
+            productName: order.product?.name || 'Unknown Product',
             key: key
           })
         });
-        await updateOrder(order.id, { status: 'DELIVERED', deliveredKey: key });
-        alert('Key delivered successfully!');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          await updateOrder(order.id, { status: 'DELIVERED', deliveredKey: key });
+          if (data.simulated) {
+            alert('Key saved! (EmailJS not configured, so email was simulated in console)');
+          } else {
+            alert('Key delivered successfully via EmailJS!');
+          }
+        } else {
+          alert(`Failed to deliver key: ${data.error || 'Unknown error'}`);
+        }
       } catch (error) {
+        console.error('Delivery error:', error);
         alert('Failed to deliver key. Check console.');
       }
     }
