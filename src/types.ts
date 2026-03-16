@@ -18,6 +18,7 @@ export interface Order {
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'DELIVERED';
   date: string;
   deliveredKey?: string;
+  userId?: string;
 }
 
 export interface Settings {

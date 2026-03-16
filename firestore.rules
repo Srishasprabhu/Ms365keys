@@ -35,7 +35,8 @@ service cloud.firestore {
              data.price is number && data.price >= 0 &&
              data.status in ['PENDING', 'COMPLETED', 'CANCELLED', 'DELIVERED'] &&
              (!('date' in data) || (data.date is string && data.date.size() < 50)) &&
-             (!('deliveredKey' in data) || (data.deliveredKey is string && data.deliveredKey.size() < 500));
+             (!('deliveredKey' in data) || (data.deliveredKey is string && data.deliveredKey.size() < 500)) &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() < 100));
     }
 
     function isValidSettings(data) {

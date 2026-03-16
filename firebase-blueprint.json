@@ -26,7 +26,8 @@
         "price": { "type": "number" },
         "status": { "type": "string", "enum": ["PENDING", "COMPLETED", "CANCELLED", "DELIVERED"] },
         "date": { "type": "string" },
-        "deliveredKey": { "type": "string" }
+        "deliveredKey": { "type": "string" },
+        "userId": { "type": "string" }
       },
       "required": ["customerName", "email", "product", "price", "status", "date"]
     },

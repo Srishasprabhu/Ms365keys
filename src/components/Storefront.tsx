@@ -9,6 +9,7 @@ interface StorefrontProps {
   onOrderSubmit: (product: Product, details: { name: string; email: string }) => void;
   onAdminClick: () => void;
   onTrackOrderClick: () => void;
+  onClientLoginClick: () => void;
 }
 
 const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
@@ -42,7 +43,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
   );
 };
 
-export function Storefront({ products, settings, onOrderSubmit, onAdminClick, onTrackOrderClick }: StorefrontProps) {
+export function Storefront({ products, settings, onOrderSubmit, onAdminClick, onTrackOrderClick, onClientLoginClick }: StorefrontProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
@@ -74,6 +75,13 @@ export function Storefront({ products, settings, onOrderSubmit, onAdminClick, on
               className="bg-[#0F1123] border border-indigo-500/30 hover:border-purple-500/50 text-white px-10 py-4 rounded-full font-semibold tracking-wide transition-all"
             >
               Track Order
+            </button>
+            <button 
+              onClick={onClientLoginClick}
+              className="bg-[#0F1123] border border-indigo-500/30 hover:border-purple-500/50 text-white px-10 py-4 rounded-full font-semibold tracking-wide transition-all flex items-center gap-2"
+            >
+              <User size={18} />
+              Client Login
             </button>
           </div>
         </div>
