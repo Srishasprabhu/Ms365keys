@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LogOut, Package, ShoppingBag, Settings as SettingsIcon, Plus, Edit, Trash2, Upload, Send } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import { Product, Order, Settings } from '../types';
 
 interface AdminDashboardProps {
@@ -193,29 +194,29 @@ function OrdersTab({ orders, updateOrder }: { orders: Order[], updateOrder: (id:
     const key = prompt(`Enter the Key or Account Details to deliver to ${order.email}:`);
     if (key) {
       try {
-        const response = await fetch('/api/deliver-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId: order.id,
-            customerEmail: order.email,
-            productName: order.product?.name || 'Unknown Product',
-            key: key
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          await updateOrder(order.id, { status: 'DELIVERED', deliveredKey: key });
-          if (data.simulated) {
-            alert('Key saved! (EmailJS not configured, so email was simulated in console)');
-          } else {
-            alert('Key delivered successfully via EmailJS!');
-          }
-        } else {
-          alert(`Failed to deliver key: ${data.error || 'Unknown error'}`);
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+        if (!serviceId || !templateId || !publicKey) {
+          alert('EmailJS credentials not configured in environment variables (VITE_EMAILJS_SERVICE_ID, etc). Please check your Netlify settings.');
+          return;
         }
+
+        await emailjs.send(
+          serviceId,
+          templateId,
+          {
+            to_email: order.email,
+            product_name: order.product?.name || 'Unknown Product',
+            delivery_key: key,
+            order_id: order.id,
+          },
+          publicKey
+        );
+        
+        await updateOrder(order.id, { status: 'DELIVERED', deliveredKey: key });
+        alert('Key delivered successfully via EmailJS!');
       } catch (error) {
         console.error('Delivery error:', error);
         alert('Failed to deliver key. Check console.');

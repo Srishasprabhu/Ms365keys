@@ -1,7 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import twilio from "twilio";
-import emailjs from "@emailjs/nodejs";
 import path from "path";
 
 async function startServer() {
@@ -11,47 +10,6 @@ async function startServer() {
   app.use(express.json());
 
   // API routes FIRST
-  app.post("/api/deliver-order", async (req, res) => {
-    try {
-      const { orderId, customerEmail, productName, key } = req.body;
-      console.log(`\n[EMAIL DELIVERY] =====================`);
-      console.log(`Sending delivery email to: ${customerEmail}`);
-      console.log(`Product: ${productName}`);
-      console.log(`Key/Account Details: ${key}`);
-      console.log(`========================================\n`);
-      
-      const serviceId = process.env.EMAILJS_SERVICE_ID;
-      const templateId = process.env.EMAILJS_TEMPLATE_ID;
-      const publicKey = process.env.EMAILJS_PUBLIC_KEY;
-      const privateKey = process.env.EMAILJS_PRIVATE_KEY;
-
-      if (!serviceId || !templateId || !publicKey) {
-        console.warn("EmailJS credentials not configured. Simulating email delivery.");
-        return res.json({ success: true, simulated: true, message: "EmailJS not configured. Simulated delivery." });
-      }
-
-      await emailjs.send(
-        serviceId,
-        templateId,
-        {
-          to_email: customerEmail,
-          product_name: productName,
-          delivery_key: key,
-          order_id: orderId,
-        },
-        {
-          publicKey: publicKey,
-          privateKey: privateKey,
-        }
-      );
-      
-      res.json({ success: true, simulated: false });
-    } catch (error) {
-      console.error("Email Delivery Error:", error);
-      res.status(500).json({ success: false, error: "Failed to send email" });
-    }
-  });
-
   app.post("/api/notify-order", async (req, res) => {
     try {
       const { customerName, productName, price } = req.body;
