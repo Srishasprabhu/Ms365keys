@@ -51,27 +51,28 @@ service cloud.firestore {
 
     match /products/{productId} {
       allow read: if true;
-      allow create: if isAdmin() && isValidProduct(request.resource.data);
-      allow update: if isAdmin() && isValidProduct(request.resource.data);
-      allow delete: if isAdmin();
+      allow create: if isValidProduct(request.resource.data);
+      allow update: if isValidProduct(request.resource.data);
+      allow delete: if true;
     }
 
     match /orders/{orderId} {
       // Anyone can create an order (unauthenticated checkout)
       allow create: if isValidOrder(request.resource.data);
       
-      // Admins can read all orders. Customers can read their own orders if logged in.
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.email == request.auth.token.email);
+      // Anyone can read orders (since we removed auth, we have to allow this for tracking)
+      allow read: if true;
       
-      allow update: if isAdmin() && isValidOrder(request.resource.data);
-      allow delete: if isAdmin();
+      // Anyone can update or delete orders (since we removed auth)
+      allow update: if isValidOrder(request.resource.data);
+      allow delete: if true;
     }
 
     match /settings/{settingId} {
       allow read: if true;
-      allow create: if isAdmin() && isValidSettings(request.resource.data);
-      allow update: if isAdmin() && isValidSettings(request.resource.data);
-      allow delete: if isAdmin();
+      allow create: if isValidSettings(request.resource.data);
+      allow update: if isValidSettings(request.resource.data);
+      allow delete: if true;
     }
   }
 }

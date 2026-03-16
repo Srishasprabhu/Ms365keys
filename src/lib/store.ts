@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Product, Order, Settings } from '../types';
-import { db, auth } from '../firebase';
-import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, query, where } from 'firebase/firestore';
+import { db } from '../firebase';
+import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 
 enum OperationType {
   CREATE = 'create',
@@ -16,32 +16,13 @@ interface FirestoreErrorInfo {
   error: string;
   operationType: OperationType;
   path: string | null;
-  authInfo: {
-    userId?: string;
-    email?: string;
-    emailVerified?: boolean;
-    isAnonymous?: boolean;
-    tenantId?: string;
-    providerInfo?: any[];
-  }
+  authInfo: any;
 }
 
 function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email || undefined,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId || undefined,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
+    authInfo: {},
     operationType,
     path
   };
@@ -57,7 +38,7 @@ const defaultSettings: Settings = {
   upiName: '',
 };
 
-export function useStore(isAdmin: boolean = false, userEmail: string | null = null) {
+export function useStore(isAdmin: boolean = false) {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
@@ -79,13 +60,6 @@ export function useStore(isAdmin: boolean = false, userEmail: string | null = nu
       unsubOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
         setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
       }, (error) => handleFirestoreError(error, OperationType.LIST, 'orders'));
-    } else if (userEmail) {
-      const q = query(collection(db, 'orders'), where('email', '==', userEmail));
-      unsubOrders = onSnapshot(q, (snapshot) => {
-        setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
-      }, (error) => handleFirestoreError(error, OperationType.LIST, 'orders(query)'));
-    } else {
-      setOrders([]);
     }
 
     return () => {
@@ -93,7 +67,7 @@ export function useStore(isAdmin: boolean = false, userEmail: string | null = nu
       unsubSettings();
       unsubOrders();
     };
-  }, [isAdmin, userEmail]);
+  }, [isAdmin]);
 
   const addProduct = async (product: Omit<Product, 'id'>) => {
     try {
