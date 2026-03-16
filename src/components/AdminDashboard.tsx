@@ -231,11 +231,11 @@ function OrdersTab({ orders, updateOrder }: { orders: Order[], updateOrder: (id:
           <tbody className="divide-y divide-indigo-500/10">
             {orders.map(o => (
               <tr key={o.id} className="hover:bg-indigo-500/5 transition-colors">
-                <td className="p-5 font-mono text-xs text-indigo-200/50">{o.id.substring(0, 8)}...</td>
-                <td className="p-5 text-white">{o.customerName}</td>
-                <td className="p-5 text-indigo-200/70">{o.email}</td>
-                <td className="p-5 text-indigo-200">{o.product.name}</td>
-                <td className="p-5 text-indigo-200">₹{o.price}</td>
+                <td className="p-5 font-mono text-xs text-indigo-200/50">{o.id ? o.id.substring(0, 8) : 'Unknown'}...</td>
+                <td className="p-5 text-white">{o.customerName || 'Unknown'}</td>
+                <td className="p-5 text-indigo-200/70">{o.email || 'Unknown'}</td>
+                <td className="p-5 text-indigo-200">{o.product?.name || 'Unknown'}</td>
+                <td className="p-5 text-indigo-200">₹{o.price || 0}</td>
                 <td className="p-5">
                   <span className={`px-3 py-1.5 rounded-full text-xs font-mono uppercase tracking-wide border ${
                     o.status === 'DELIVERED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
@@ -243,10 +243,10 @@ function OrdersTab({ orders, updateOrder }: { orders: Order[], updateOrder: (id:
                     o.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
                     'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
                   }`}>
-                    {o.status}
+                    {o.status || 'PENDING'}
                   </span>
                 </td>
-                <td className="p-5 text-indigo-200/50">{new Date(o.date).toLocaleDateString()}</td>
+                <td className="p-5 text-indigo-200/50">{o.date ? new Date(o.date).toLocaleDateString() : 'Unknown'}</td>
                 <td className="p-5 text-right flex items-center justify-end gap-3">
                   {o.status === 'PENDING' && (
                     <button 
@@ -257,7 +257,7 @@ function OrdersTab({ orders, updateOrder }: { orders: Order[], updateOrder: (id:
                     </button>
                   )}
                   <select 
-                    value={o.status} 
+                    value={o.status || 'PENDING'} 
                     onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
                     className="bg-[#060714] border border-indigo-500/20 rounded-lg p-1.5 text-xs text-indigo-200 focus:outline-none focus:border-purple-500 transition-colors"
                   >

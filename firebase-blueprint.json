@@ -10,7 +10,8 @@
         "price": { "type": "number" },
         "stock": { "type": "number" },
         "category": { "type": "string" },
-        "type": { "type": "string" }
+        "type": { "type": "string" },
+        "flashSaleEnd": { "type": "string" }
       },
       "required": ["name", "description", "price", "stock", "category", "type"]
     },
@@ -21,10 +22,11 @@
       "properties": {
         "customerName": { "type": "string" },
         "email": { "type": "string" },
-        "product": { "$ref": "#/entities/Product" },
+        "product": { "type": "object" },
         "price": { "type": "number" },
-        "status": { "type": "string", "enum": ["PENDING", "COMPLETED", "CANCELLED"] },
-        "date": { "type": "string", "format": "date-time" }
+        "status": { "type": "string", "enum": ["PENDING", "COMPLETED", "CANCELLED", "DELIVERED"] },
+        "date": { "type": "string" },
+        "deliveredKey": { "type": "string" }
       },
       "required": ["customerName", "email", "product", "price", "status", "date"]
     },
@@ -33,7 +35,9 @@
       "description": "Global store settings",
       "type": "object",
       "properties": {
-        "paymentQrUrl": { "type": "string" }
+        "paymentQrUrl": { "type": "string" },
+        "upiId": { "type": "string" },
+        "upiName": { "type": "string" }
       },
       "required": ["paymentQrUrl"]
     }

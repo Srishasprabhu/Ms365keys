@@ -1,10 +1,77 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // WARNING: Since authentication was removed, these rules allow public read/write access.
-    // This is insecure and only recommended for prototyping.
-    match /{document=**} {
-      allow read, write: if true;
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == "srishasprabhu@gmail.com";
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidProduct(data) {
+      return hasRequiredFields(['name', 'description', 'price', 'stock', 'category', 'type']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.description is string && data.description.size() < 2000 &&
+             data.price is number && data.price >= 0 &&
+             data.stock is number && data.stock >= 0 &&
+             data.category is string && data.category.size() < 50 &&
+             data.type is string && data.type.size() < 50 &&
+             (!('flashSaleEnd' in data) || (data.flashSaleEnd is string && data.flashSaleEnd.size() < 50));
+    }
+
+    function isValidOrder(data) {
+      return hasRequiredFields(['customerName', 'email', 'product', 'price', 'status']) &&
+             data.customerName is string && data.customerName.size() > 0 && data.customerName.size() < 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() < 100 &&
+             data.product is map &&
+             data.price is number && data.price >= 0 &&
+             data.status in ['PENDING', 'COMPLETED', 'CANCELLED', 'DELIVERED'] &&
+             (!('date' in data) || (data.date is string && data.date.size() < 50)) &&
+             (!('deliveredKey' in data) || (data.deliveredKey is string && data.deliveredKey.size() < 500));
+    }
+
+    function isValidSettings(data) {
+      return hasRequiredFields(['paymentQrUrl']) &&
+             data.paymentQrUrl is string && data.paymentQrUrl.size() < 500 &&
+             (!('upiId' in data) || (data.upiId is string && data.upiId.size() < 100)) &&
+             (!('upiName' in data) || (data.upiName is string && data.upiName.size() < 100));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidProduct(request.resource.data);
+      allow update: if isAdmin() && isValidProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      // Anyone can create an order (unauthenticated checkout)
+      allow create: if isValidOrder(request.resource.data);
+      
+      // Admins can read all orders. Customers can read their own orders if logged in.
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.email == request.auth.token.email);
+      
+      allow update: if isAdmin() && isValidOrder(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidSettings(request.resource.data);
+      allow update: if isAdmin() && isValidSettings(request.resource.data);
+      allow delete: if isAdmin();
     }
   }
 }

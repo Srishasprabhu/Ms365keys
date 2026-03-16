@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Storefront } from './components/Storefront';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminLogin } from './components/AdminLogin';
@@ -6,13 +6,32 @@ import { Chatbot } from './components/Chatbot';
 import { OrderTracking } from './components/OrderTracking';
 import { useStore } from './lib/store';
 import { Product } from './types';
+import { auth } from './firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 export default function App() {
   const [view, setView] = useState<'store' | 'admin-login' | 'admin-dashboard' | 'tracking'>('store');
   const [isAdmin, setIsAdmin] = useState(false);
-  // We need to fetch orders even if not admin so users can track them.
-  // In a real app, you'd have a specific endpoint to fetch orders by email instead of fetching all.
-  const { products, addProduct, updateProduct, deleteProduct, orders, addOrder, updateOrder, settings, updateSettings } = useStore(true); // Temporarily set to true to allow tracking to read orders
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  
+  const { products, addProduct, updateProduct, deleteProduct, orders, addOrder, updateOrder, settings, updateSettings } = useStore(isAdmin, userEmail);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.email) {
+        setUserEmail(user.email);
+        if (user.email === 'srishasprabhu@gmail.com') {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } else {
+        setUserEmail(null);
+        setIsAdmin(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleOrderSubmit = async (product: Product, details: { name: string; email: string }) => {
     const newOrder = {
@@ -47,12 +66,11 @@ export default function App() {
   };
 
   const handleLogin = () => {
-    setIsAdmin(true);
     setView('admin-dashboard');
   };
 
-  const handleLogout = () => {
-    setIsAdmin(false);
+  const handleLogout = async () => {
+    await signOut(auth);
     setView('store');
   };
 
@@ -64,7 +82,13 @@ export default function App() {
             products={products} 
             settings={settings} 
             onOrderSubmit={handleOrderSubmit} 
-            onAdminClick={() => setView('admin-login')} 
+            onAdminClick={() => {
+              if (isAdmin) {
+                setView('admin-dashboard');
+              } else {
+                setView('admin-login');
+              }
+            }} 
             onTrackOrderClick={() => setView('tracking')}
           />
           <Chatbot />
@@ -74,6 +98,7 @@ export default function App() {
         <OrderTracking 
           orders={orders}
           onBack={() => setView('store')}
+          userEmail={userEmail}
         />
       )}
       {view === 'admin-login' && (

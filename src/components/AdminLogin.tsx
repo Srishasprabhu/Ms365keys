@@ -1,17 +1,28 @@
 import React, { useState } from 'react';
 import { Lock, User } from 'lucide-react';
+import { auth } from '../firebase';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 export function AdminLogin({ onLogin, onBack }: { onLogin: () => void; onBack: () => void }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (username === 'admin' && password === '1976Prabhu#') {
-      onLogin();
-    } else {
-      setError('Invalid credentials');
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      if (result.user.email === 'srishasprabhu@gmail.com') {
+        onLogin();
+      } else {
+        setError('You do not have admin access.');
+        await auth.signOut();
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,35 +43,16 @@ export function AdminLogin({ onLogin, onBack }: { onLogin: () => void; onBack: (
           <p className="text-indigo-200/60 mt-2">Command Center Login</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#0F1123] border border-indigo-500/20 rounded-3xl p-8 space-y-5 shadow-2xl shadow-purple-900/20">
-          <div>
-            <label className="block text-sm text-indigo-200/80 mb-2 font-medium">Username</label>
-            <div className="relative">
-              <span className="absolute left-4 top-3.5 text-indigo-200/50"><User size={18} /></span>
-              <input 
-                type="text" 
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                className="w-full bg-[#060714] border border-indigo-500/20 rounded-xl p-3 pl-12 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm text-indigo-200/80 mb-2 font-medium">Password</label>
-            <div className="relative">
-              <span className="absolute left-4 top-3.5 text-indigo-200/50"><Lock size={18} /></span>
-              <input 
-                type="password" 
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-[#060714] border border-indigo-500/20 rounded-xl p-3 pl-12 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
-              />
-            </div>
-          </div>
-          <button type="submit" className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3.5 rounded-xl font-bold tracking-wide mt-8 transition-all shadow-[0_0_15px_rgba(107,70,193,0.3)]">
-            Access Dashboard
+        <div className="bg-[#0F1123] border border-indigo-500/20 rounded-3xl p-8 space-y-5 shadow-2xl shadow-purple-900/20 text-center">
+          <p className="text-indigo-200/80 mb-6">Sign in with your authorized Google account to access the dashboard.</p>
+          <button 
+            onClick={handleGoogleLogin} 
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3.5 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_15px_rgba(107,70,193,0.3)] disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? 'Signing in...' : 'Sign in with Google'}
           </button>
-        </form>
+        </div>
         
         <div className="text-center mt-8">
           <button onClick={onBack} className="text-indigo-200/50 hover:text-purple-400 text-sm transition-colors">
